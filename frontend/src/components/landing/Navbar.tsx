@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Menu, X, ChevronDown, ShieldCheck, Zap, Building2, FileText, Lock, BarChart3, ArrowRight } from 'lucide-react';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
@@ -33,7 +33,7 @@ const navItems = [
 
 const ctaButtons = [
   { label: 'Sign In', variant: 'ghost' as const, onClick: () => window.location.href = '/app' },
-  { label: 'Request Demo', variant: 'primary' as const, onClick: () => {} },
+  { label: 'Request Demo', variant: 'primary' as const, onClick: () => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' }) },
 ];
 
 export function Navbar({ onCtaClick, onDemoClick }: NavbarProps) {
@@ -41,12 +41,78 @@ export function Navbar({ onCtaClick, onDemoClick }: NavbarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [hoveredNavIndex, setHoveredNavIndex] = useState<number | null>(null);
   const [activeMobileNav, setActiveMobileNav] = useState<number | null>(null);
+  const [focusedSubIndex, setFocusedSubIndex] = useState<number | null>(null);
   const prefersReducedMotion = useReducedMotion();
+  const navItemRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Keyboard navigation for desktop dropdowns
+  const handleKeyDown = useCallback((e: React.KeyboardEvent, index: number) => {
+    const item = navItems[index];
+    if (!item.subItems.length) return;
+
+    switch (e.key) {
+      case 'Enter':
+      case ' ':
+        e.preventDefault();
+        setHoveredNavIndex(hoveredNavIndex === index ? null : index);
+        setFocusedSubIndex(0);
+        break;
+      case 'Escape':
+        setHoveredNavIndex(null);
+        setFocusedSubIndex(null);
+        navItemRefs.current[index]?.focus();
+        break;
+      case 'ArrowDown':
+        if (hoveredNavIndex === index) {
+          e.preventDefault();
+          setFocusedSubIndex(prev => prev === null ? 0 : Math.min(prev + 1, item.subItems.length - 1));
+        }
+        break;
+      case 'ArrowUp':
+        if (hoveredNavIndex === index) {
+          e.preventDefault();
+          setFocusedSubIndex(prev => prev === null || prev === 0 ? item.subItems.length - 1 : prev - 1);
+        }
+        break;
+      case 'Tab':
+        if (hoveredNavIndex === index && focusedSubIndex === item.subItems.length - 1) {
+          setHoveredNavIndex(null);
+          setFocusedSubIndex(null);
+        }
+        break;
+    }
+  }, []);
+
+  const handleSubItemKeyDown = useCallback((e: React.KeyboardEvent, index: number, subIndex: number) => {
+    const item = navItems[index];
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setFocusedSubIndex(prev => prev === null ? 0 : Math.min(prev + 1, item.subItems.length - 1));
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setFocusedSubIndex(prev => prev === null || prev === 0 ? item.subItems.length - 1 : prev - 1);
+        break;
+      case 'Escape':
+        setHoveredNavIndex(null);
+        setFocusedSubIndex(null);
+        navItemRefs.current[index]?.focus();
+        break;
+      case 'Tab':
+        if (subIndex === item.subItems.length - 1 && !e.shiftKey) {
+          setHoveredNavIndex(null);
+          setFocusedSubIndex(null);
+        }
+        break;
+    }
   }, []);
 
   const handleNavClick = (href: string) => {
@@ -63,6 +129,7 @@ export function Navbar({ onCtaClick, onDemoClick }: NavbarProps) {
       element.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth' });
     }
     setHoveredNavIndex(null);
+    setFocusedSubIndex(null);
   };
 
   return (
@@ -90,13 +157,10 @@ export function Navbar({ onCtaClick, onDemoClick }: NavbarProps) {
             <span className="font-display font-bold text-xl text-text-primary tracking-tight hidden sm:block">
               Vendor<span className="text-electric-lime">IQ</span>
             </span>
-            <span className="text-xs font-mono font-semibold text-electric-lime uppercase tracking-wider hidden md:inline-block px-2 py-0.5 rounded bg-lime-muted border border-electric-lime/30">
-              PRO
-            </span>
           </motion.div>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-1">
+          <div className="hidden lg:flex items-center gap-1" role="menubar">
             {navItems.map((item, index) => (
               <div
                 key={item.label}
@@ -105,12 +169,17 @@ export function Navbar({ onCtaClick, onDemoClick }: NavbarProps) {
                 onMouseLeave={() => setHoveredNavIndex(null)}
               >
                 <button
+                  ref={(el) => { navItemRefs.current[index] = el; }}
+                  onKeyDown={(e) => handleKeyDown(e, index)}
                   className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium rounded-lg transition-all ${
                     hoveredNavIndex === index
                       ? 'text-electric-lime bg-lime-muted'
                       : 'text-text-secondary hover:text-text-primary hover:bg-surface-glass'
                   }`}
                   onClick={() => item.href.startsWith('#') ? handleNavClick(item.href) : {}}
+                  role="menuitem"
+                  aria-haspopup={item.subItems.length > 0}
+                  aria-expanded={hoveredNavIndex === index}
                 >
                   {item.label}
                   {item.subItems.length > 0 && <ChevronDown className="w-3.5 h-3.5 transition-transform" />}
@@ -120,6 +189,7 @@ export function Navbar({ onCtaClick, onDemoClick }: NavbarProps) {
                 <AnimatePresence>
                   {hoveredNavIndex === index && item.subItems.length > 0 && (
                     <motion.div
+                      ref={dropdownRef}
                       initial={{ opacity: 0, y: 8, scale: 0.98 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -4, scale: 0.98 }}
@@ -129,13 +199,16 @@ export function Navbar({ onCtaClick, onDemoClick }: NavbarProps) {
                     >
                       {item.subItems.map((sub, subIndex) => (
                         <motion.button
+                          ref={(el) => { if (focusedSubIndex === subIndex) el?.focus(); }}
                           key={sub.label}
                           initial={{ opacity: 0, x: -8 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: 0.03 * subIndex, duration: 0.15 }}
                           onClick={() => handleSubItemClick(sub.href)}
-                          className="w-full flex flex-col gap-0.5 px-3 py-2.5 rounded-xl text-left transition-all hover:bg-surface-glass-strong hover:text-text-primary group"
+                          onKeyDown={(e) => handleSubItemKeyDown(e, index, subIndex)}
+                          className={`w-full flex flex-col gap-0.5 px-3 py-2.5 rounded-xl text-left transition-all hover:bg-surface-glass-strong hover:text-text-primary group ${focusedSubIndex === subIndex ? 'bg-surface-glass-strong outline-none ring-2 ring-electric-lime/50' : ''}`}
                           role="menuitem"
+                          tabIndex={hoveredNavIndex === index ? 0 : -1}
                         >
                           <span className="font-medium text-sm">{sub.label}</span>
                           <span className="text-xs text-text-muted">{sub.description}</span>

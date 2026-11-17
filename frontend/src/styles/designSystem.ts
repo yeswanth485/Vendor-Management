@@ -98,20 +98,20 @@ export const designTokens = {
     sizes: {
       xs: '0.6875rem',    // 11px
       sm: '0.75rem',      // 12px
-      base: '0.875rem',   // 14px
-      lg: '1rem',         // 16px
-      xl: '1.125rem',     // 18px
-      '2xl': '1.25rem',   // 20px
-      '3xl': '1.5rem',    // 24px
-      '4xl': '2rem',      // 32px
-      '5xl': '2.5rem',    // 40px
-      '6xl': '3.5rem',    // 56px
+      base: '1rem',       // 16px
+      lg: '1.125rem',     // 18px
+      xl: '1.25rem',      // 20px
+      '2xl': '1.5rem',    // 24px
+      '3xl': '1.875rem',  // 30px
+      '4xl': '2.25rem',   // 36px
+      '5xl': '3rem',      // 48px
+      '6xl': '3.75rem',   // 60px
       '7xl': '4.5rem',    // 72px
     },
     lineHeights: {
       tight: 1.1,
       snug: 1.35,
-      normal: 1.55,
+      normal: 1.6,
       relaxed: 1.7,
     },
   },
@@ -167,10 +167,11 @@ export const designTokens = {
       page: '500ms',
     },
     stagger: {
-      fast: '0.03s',
-      normal: '0.05s',
-      slow: '0.08s',
+      fast: '0.02s',
+      normal: '0.04s',
+      slow: '0.06s',
     },
+    maxCascadeDepth: 8,
   },
 
   breakpoints: {
@@ -302,8 +303,8 @@ export const motionVariants = {
   staggerContainer: {
     animate: {
       transition: {
-        staggerChildren: 0.06,
-        delayChildren: 0.1,
+        staggerChildren: 0.04,
+        delayChildren: 0.08,
       },
     },
   },
@@ -312,7 +313,7 @@ export const motionVariants = {
     animate: { 
       opacity: 1, 
       y: 0, 
-      transition: { duration: 0.45, ease: [0.16, 1, 0.3, 1] } 
+      transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] } 
     },
   },
   cardHover: {

@@ -1,12 +1,13 @@
 import React from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   Building2, FileText, ShieldCheck, ShieldAlert, 
   CheckCircle2, Eye, Zap, Database, Users, 
   Clock, Lock, RotateCcw, Search, Link, 
   BarChart3, FileCheck2, AlertTriangle, 
-  Smartphone, Globe, Layers, GraduationCap
+  Smartphone, Globe, Layers, GraduationCap, ChevronDown
 } from 'lucide-react';
+import { useState } from 'react';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
 
 interface FeaturesSectionProps {
@@ -156,6 +157,7 @@ const categoryColors = {
 
 export function FeaturesSection({ className = '' }: FeaturesSectionProps) {
   const prefersReducedMotion = useReducedMotion();
+  const [activeCategory, setActiveCategory] = useState<number | null>(0);
 
   return (
     <section
@@ -176,95 +178,163 @@ export function FeaturesSection({ className = '' }: FeaturesSectionProps) {
             <span className="w-2 h-2 rounded-full bg-electric-lime animate-pulse-glow" />
             PLATFORM CAPABILITIES
           </span>
-          <h2 id="features-heading" className="font-display font-extrabold text-4xl md:text-5xl lg:text-6xl leading-[1.1] tracking-tight text-text-primary mb-6">
-            Every Capability You Need for <span className="gradient-text">Complete Vendor Control</span>
+          <h2 id="features-heading" className="font-display font-bold text-3xl md:text-4xl lg:text-5xl leading-[1.15] tracking-tight text-text-primary mb-6">
+            Capabilities Across the <span className="gradient-text">Vendor Lifecycle</span>
           </h2>
-          <p className="text-lg text-text-secondary leading-relaxed">
+          <p className="text-base md:text-lg text-text-secondary leading-relaxed max-w-2xl mx-auto">
             Five integrated modules covering the full vendor lifecycle — from initial registration 
             through ongoing performance monitoring and risk oversight.
           </p>
         </motion.div>
 
-        {/* Category Tabs */}
+        {/* Category Tabs (Desktop) / Accordion (Mobile) */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.2, duration: 0.5 }}
-          className="flex flex-wrap justify-center gap-3 mb-12"
+          className="mb-12"
           role="tablist"
           aria-label="Feature categories"
         >
-          {features.map((category, index) => (
-            <button
-              key={category.category}
-              role="tab"
-              aria-selected={index === 0}
-              className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                index === 0
-                  ? 'bg-electric-lime text-ink-black shadow-glow-lime-sm'
-                  : 'bg-surface-glass text-text-secondary hover:text-text-primary hover:bg-surface-glass-strong border border-surface-glass-border'
-              }`}
-            >
-              <span className="flex items-center gap-2">
-                <category.icon 
-                  className="w-4 h-4" 
-                  style={{ color: `var(--color-${categoryColors[category.category as keyof typeof categoryColors].icon.replace('text-', '')})` }} 
-                />
-                {category.category}
-              </span>
-            </button>
-          ))}
+          {/* Desktop: Tabs */}
+          <div className="hidden lg:flex flex-wrap justify-center gap-3">
+            {features.map((category, index) => (
+              <button
+                key={category.category}
+                role="tab"
+                aria-selected={activeCategory === index}
+                onClick={() => setActiveCategory(index)}
+                className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                  activeCategory === index
+                    ? 'bg-electric-lime text-ink-black shadow-glow-lime-sm'
+                    : 'bg-surface-glass text-text-secondary hover:text-text-primary hover:bg-surface-glass-strong border border-surface-glass-border'
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <category.icon 
+                    className="w-4 h-4" 
+                    style={{ color: `var(--color-${categoryColors[category.category as keyof typeof categoryColors].icon.replace('text-', '')})` }} 
+                  />
+                  {category.category}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Mobile: Accordion */}
+          <div className="lg:hidden space-y-3">
+            {features.map((category, index) => (
+              <motion.div
+                key={category.category}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: prefersReducedMotion ? 0 : index * 0.05, duration: 0.3 }}
+              >
+                <button
+                  onClick={() => setActiveCategory(activeCategory === index ? null : index)}
+                  className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl text-left font-medium transition-all ${
+                    activeCategory === index
+                      ? 'bg-electric-lime/10 text-electric-lime border border-electric-lime/30'
+                      : 'bg-surface-glass text-text-primary hover:bg-surface-glass-strong border border-surface-glass-border'
+                  }`}
+                  aria-expanded={activeCategory === index}
+                >
+                  <span className="flex items-center gap-2">
+                    <category.icon 
+                      className="w-5 h-5" 
+                      style={{ color: `var(--color-${categoryColors[category.category as keyof typeof categoryColors].icon.replace('text-', '')})` }} 
+                    />
+                    {category.category}
+                  </span>
+                  <ChevronDown 
+                    className={`w-5 h-5 transition-transform ${activeCategory === index ? 'rotate-180' : ''}`} 
+                  />
+                </button>
+                <AnimatePresence>
+                  {activeCategory === index && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="mt-2 pl-11 border-l border-surface-glass-border space-y-3"
+                    >
+                      {category.items.map((feature, featIndex) => (
+                        <motion.article
+                          key={`${category.category}-${feature.title}`}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: prefersReducedMotion ? 0 : featIndex * 0.04, duration: 0.3 }}
+                          className="group relative glass rounded-2xl p-5 border hover:border-electric-lime/30 transition-all"
+                        >
+                          <motion.div
+                            whileHover={{ scale: 1.02 }}
+                            transition={{ duration: 0.2 }}
+                            className="w-10 h-10 rounded-xl bg-electric-lime/15 border border-electric-lime/30 flex items-center justify-center mb-3"
+                          >
+                            <feature.icon className="w-5 h-5" style={{ color: `var(--color-${categoryColors[category.category as keyof typeof categoryColors].icon.replace('text-', '')})` }} />
+                          </motion.div>
+                          <h3 className="font-semibold text-text-primary mb-1">{feature.title}</h3>
+                          <p className="text-sm text-text-secondary">{feature.description}</p>
+                        </motion.article>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            ))}
+          </div>
         </motion.div>
 
-        {/* Feature Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {features.flatMap((category, catIndex) => 
-            category.items.map((feature, featIndex) => (
-              <motion.article
-                key={`${category.category}-${feature.title}`}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-50px' }}
-                transition={{ 
-                  delay: prefersReducedMotion ? 0 : (catIndex * 0.08 + featIndex * 0.04), 
-                  duration: 0.5, 
-                  ease: [0.16, 1, 0.3, 1] 
-                }}
-                className={`group relative glass rounded-3xl p-6 md:p-8 border ${categoryColors[category.category as keyof typeof categoryColors].border} hover:border-electric-lime/40 hover:shadow-glow-lime-sm transition-all duration-500`}
+        {/* Feature Grid (Desktop only) */}
+        {activeCategory !== null && (
+          <div className="hidden lg:grid lg:grid-cols-1 lg:md:grid-cols-2 lg:lg:grid-cols-3 gap-6">
+            {features[activeCategory].items.map((feature, featIndex) => (
+            <motion.article
+              key={`${features[activeCategory].category}-${feature.title}`}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-50px' }}
+              transition={{ 
+                delay: prefersReducedMotion ? 0 : featIndex * 0.05, 
+                duration: 0.4, 
+                ease: [0.16, 1, 0.3, 1] 
+              }}
+              className={`group relative glass rounded-3xl p-6 md:p-8 border ${categoryColors[features[activeCategory].category as keyof typeof categoryColors].border} hover:border-electric-lime/40 hover:shadow-glow-lime-sm transition-all duration-300`}
+            >
+              {/* Category Badge */}
+              <div className="absolute top-5 right-5">
+                <span className={`text-xs font-mono px-2 py-1 rounded-full ${categoryColors[features[activeCategory].category as keyof typeof categoryColors].bg} ${categoryColors[features[activeCategory].category as keyof typeof categoryColors].text} border ${categoryColors[features[activeCategory].category as keyof typeof categoryColors].border}`}>
+                  {features[activeCategory].category.toUpperCase()}
+                </span>
+              </div>
+
+              {/* Icon */}
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.2 }}
+                className={`w-11 h-11 rounded-2xl flex items-center justify-center mb-4 ${categoryColors[features[activeCategory].category as keyof typeof categoryColors].bg}`}
               >
-                {/* Category Badge */}
-                <div className="absolute top-6 right-6">
-                  <span className={`text-xs font-mono px-2 py-1 rounded-full ${categoryColors[category.category as keyof typeof categoryColors].bg} ${categoryColors[category.category as keyof typeof categoryColors].text} border ${categoryColors[category.category as keyof typeof categoryColors].border}`}>
-                    {category.category.toUpperCase()}
-                  </span>
-                </div>
+                <feature.icon className="w-5 h-5" style={{ color: `var(--color-${categoryColors[features[activeCategory].category as keyof typeof categoryColors].icon.replace('text-', '')})` }} />
+              </motion.div>
 
-                {/* Icon */}
-                <motion.div
-                  whileHover={{ scale: 1.1, rotate: 2 }}
-                  transition={{ duration: 0.3 }}
-                  className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-5 ${categoryColors[category.category as keyof typeof categoryColors].bg}`}
-                >
-                  <feature.icon className="w-6 h-6" style={{ color: `var(--color-${categoryColors[category.category as keyof typeof categoryColors].icon.replace('text-', '')})` }} />
-                </motion.div>
+              {/* Content */}
+              <h3 className="font-bold text-lg text-text-primary mb-2 group-hover:text-electric-lime transition-colors">
+                {feature.title}
+              </h3>
+              <p className="text-text-secondary leading-relaxed">{feature.description}</p>
 
-                {/* Content */}
-                <h3 className="font-display font-bold text-xl text-text-primary mb-3 group-hover:text-electric-lime transition-colors">
-                  {feature.title}
-                </h3>
-                <p className="text-text-secondary leading-relaxed">{feature.description}</p>
-
-                {/* Hover Accent */}
-                <motion.div
-                  initial={{ opacity: 0, width: 0 }}
-                  whileHover={{ opacity: 1, width: '60px' }}
-                  className="absolute bottom-0 left-6 right-auto h-1 bg-electric-lime transition-all duration-300 overflow-hidden"
-                />
-              </motion.article>
-            ))
-          )}
+              {/* Hover Accent */}
+              <motion.div
+                initial={{ opacity: 0, width: 0 }}
+                whileHover={{ opacity: 1, width: '48px' }}
+                className="absolute bottom-5 left-5 right-auto h-1 bg-electric-lime transition-all duration-300 overflow-hidden"
+              />
+            </motion.article>
+          ))}
         </div>
+      )}
       </div>
     </section>
   );

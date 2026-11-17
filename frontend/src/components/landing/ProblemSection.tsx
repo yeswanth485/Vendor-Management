@@ -18,15 +18,15 @@ const problems = [
     description: 'Vendor information scattered across emails, spreadsheets, ERP systems, and shared drives. No single source of truth for procurement teams.',
     icon: Database,
     impact: 'High',
-    metric: '73% of enterprises report data silos',
+    metric: 'Data silos slow down every procurement decision',
   },
   {
     id: 'manual-onboarding',
     title: 'Manual Onboarding Workflows',
-    description: 'Paper-based or email-driven vendor registration creates bottlenecks. Average onboarding takes 3-6 weeks with repeated back-and-forth.',
+    description: 'Paper-based or email-driven vendor registration creates bottlenecks. Onboarding takes weeks with repeated back-and-forth.',
     icon: FolderOpen,
     impact: 'Critical',
-    metric: '42 days average time-to-onboard',
+    metric: 'Weeks of manual effort per vendor',
   },
   {
     id: 'document-chaos',
@@ -34,7 +34,7 @@ const problems = [
     description: 'Statutory documents (incorporation, tax, bank letters) arrive in inconsistent formats. Manual verification is error-prone and slow.',
     icon: FileQuestion,
     impact: 'High',
-    metric: '68% documents require re-submission',
+    metric: 'Frequent re-submissions delay activation',
   },
   {
     id: 'approval-delays',
@@ -42,7 +42,7 @@ const problems = [
     description: 'Review queues lack visibility. Stakeholders don\'t know status, required actions, or blockers. Decisions stall without accountability.',
     icon: Clock,
     impact: 'Critical',
-    metric: '3.2x longer approval cycles',
+    metric: 'Approval cycles stretch without clear ownership',
   },
   {
     id: 'risk-blindness',
@@ -50,7 +50,7 @@ const problems = [
     description: 'No systematic risk scoring. High-risk vendors (sanctions, duplicate registrations, bank fraud) slip through undetected until payment issues arise.',
     icon: ShieldAlert,
     impact: 'Critical',
-    metric: '89% of fraud detected post-payment',
+    metric: 'Risk signals missed until after payment',
   },
   {
     id: 'renewal-gaps',
@@ -58,7 +58,7 @@ const problems = [
     description: 'Expired ISO certificates, tax registrations, and insurance go unnoticed. Compliance gaps expose the organization to regulatory and operational risk.',
     icon: AlertTriangle,
     impact: 'High',
-    metric: '34% vendors with expired docs',
+    metric: 'Expired certificates slip through unnoticed',
   },
 ];
 
@@ -88,14 +88,14 @@ export function ProblemSection({ className = '' }: ProblemSectionProps) {
         >
           <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-surface-glass border border-surface-glass-border text-xs font-semibold text-electric-lime uppercase tracking-wider mb-6">
             <span className="w-2 h-2 rounded-full bg-electric-lime animate-pulse-glow" />
-            THE VENDOR MANAGEMENT CRISIS
+            COMMON VENDOR MANAGEMENT CHALLENGES
           </span>
-          <h2 id="problem-heading" className="font-display font-extrabold text-4xl md:text-5xl lg:text-6xl leading-[1.1] tracking-tight text-text-primary mb-6">
-            Why Traditional Vendor Management <span className="gradient-text">Fails Enterprises</span>
+          <h2 id="problem-heading" className="font-display font-bold text-3xl md:text-4xl lg:text-5xl leading-[1.15] tracking-tight text-text-primary mb-6">
+            Why Vendor Management Needs a <span className="gradient-text">Modern Approach</span>
           </h2>
-          <p className="text-lg text-text-secondary leading-relaxed">
+          <p className="text-base md:text-lg text-text-secondary leading-relaxed max-w-2xl mx-auto">
             Most organizations rely on fragmented tools and manual processes that create blind spots, 
-            delays, and compliance risks. Here are the six critical problems VendorIQ solves.
+            delays, and compliance risks. Here are the six challenges VendorIQ addresses.
           </p>
         </motion.div>
 
@@ -148,35 +148,6 @@ export function ProblemSection({ className = '' }: ProblemSectionProps) {
               />
             </motion.article>
           ))}
-        </div>
-
-        {/* Connector Lines - Visual only on desktop */}
-        <div className="hidden lg:block absolute top-0 left-0 right-0 bottom-0 pointer-events-none overflow-hidden" aria-hidden="true">
-          <svg className="w-full h-full" viewBox="0 0 1200 600" preserveAspectRatio="none">
-            <defs>
-              <linearGradient id="connectorGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="var(--color-electric-lime)" stopOpacity="0.15" />
-                <stop offset="50%" stopColor="var(--color-silver-glass)" stopOpacity="0.08" />
-                <stop offset="100%" stopColor="var(--color-electric-lime)" stopOpacity="0.15" />
-              </linearGradient>
-            </defs>
-            <path
-              d="M200 200 Q400 150 600 200 T1000 200"
-              stroke="url(#connectorGradient)"
-              strokeWidth="1"
-              fill="none"
-              strokeDasharray="8,12"
-              className="animate-dash"
-            />
-            <path
-              d="M200 400 Q400 450 600 400 T1000 400"
-              stroke="url(#connectorGradient)"
-              strokeWidth="1"
-              fill="none"
-              strokeDasharray="8,12"
-              className="animate-dash-reverse"
-            />
-          </svg>
         </div>
       </div>
     </section>

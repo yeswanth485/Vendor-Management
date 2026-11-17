@@ -145,8 +145,8 @@ export function ProductPreview({ className = '' }: ProductPreviewProps) {
                 <h3 className="text-sm font-semibold text-text-primary">Master Vendor Directory</h3>
                 <span className="badge badge-lime">LIVE DATA</span>
               </div>
-              <div className="flex-1 overflow-hidden rounded-xl bg-bg-primary/50 border border-surface-glass-border">
-                <table className="w-full text-sm" role="table">
+              <div className="flex-1 overflow-x-auto rounded-xl bg-bg-primary/50 border border-surface-glass-border">
+                <table className="w-full min-w-[600px] text-sm" role="table">
                   <thead>
                     <tr className="border-b border-surface-glass-border bg-surface-glass">
                       <th className="px-3 py-2.5 text-left font-medium text-text-muted uppercase tracking-wider text-xs">ID</th>

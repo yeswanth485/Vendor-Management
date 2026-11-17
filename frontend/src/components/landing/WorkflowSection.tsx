@@ -379,8 +379,8 @@ export function WorkflowSection({ className = '' }: WorkflowSectionProps) {
                             className="flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors"
                           >
                             <motion.div
-                              animate={{ scale: isActive ? [1, 1.2, 1] : 1 }}
-                              transition={{ duration: 1, repeat: isActive ? Infinity : 0 }}
+                              animate={{ scale: isActive && !prefersReducedMotion ? [1, 1.2, 1] : 1 }}
+                              transition={{ duration: 1, repeat: isActive && !prefersReducedMotion ? Infinity : 0 }}
                               className="w-1.5 h-1.5 rounded-full bg-electric-lime"
                             />
                             {feature}
@@ -433,38 +433,47 @@ export function WorkflowSection({ className = '' }: WorkflowSectionProps) {
         </div>
 
         {/* Mobile Stepper Controls */}
-        <div className="lg:hidden mt-12 flex items-center justify-center gap-4">
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setActiveStep(Math.max(0, activeStep - 1))}
-            disabled={activeStep === 0}
-            className="btn btn-secondary px-6"
-          >
-            <ChevronRight className="w-4 h-4 rotate-180" /> Previous
-          </motion.button>
-          <div className="flex items-center gap-2">
-            {workflowSteps.map((_, index) => (
-              <motion.button
-                key={index}
-                onClick={() => setActiveStep(index)}
-                whileTap={{ scale: 1.2 }}
-                className={`w-2.5 h-2.5 rounded-full transition-all ${
-                  index === activeStep 
-                    ? 'bg-electric-lime w-8' 
-                    : 'bg-surface-glass-border hover:bg-electric-lime/50'
-                }`}
-                aria-label={`Go to step ${index + 1}`}
-              />
-            ))}
+        <div className="lg:hidden mt-12 flex flex-col items-center gap-6">
+          <div className="flex items-center justify-center gap-4 w-full px-4">
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setActiveStep(Math.max(0, activeStep - 1))}
+              disabled={activeStep === 0}
+              className="btn btn-secondary px-6 py-3 text-sm min-w-[100px]"
+            >
+              <ChevronRight className="w-4 h-4 rotate-180 mr-2" /> Previous
+            </motion.button>
+            <div className="flex items-center justify-center gap-2 flex-1" role="tablist" aria-label="Workflow steps">
+              {workflowSteps.map((step, index) => (
+                <motion.button
+                  key={index}
+                  onClick={() => setActiveStep(index)}
+                  whileTap={{ scale: 1.1 }}
+                  className={`w-10 h-10 rounded-full transition-all flex items-center justify-center font-mono text-xs font-bold ${
+                    index === activeStep 
+                      ? 'bg-electric-lime text-ink-black shadow-glow-lime-sm' 
+                      : 'bg-surface-glass border border-surface-glass-border text-text-muted hover:bg-electric-lime/10 hover:border-electric-lime/30'
+                  }`}
+                  role="tab"
+                  aria-selected={index === activeStep}
+                  aria-label={`Step ${index + 1}: ${step.title}`}
+                >
+                  {index < 9 ? `0${index + 1}` : `${index + 1}`}
+                </motion.button>
+              ))}
+            </div>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setActiveStep(Math.min(workflowSteps.length - 1, activeStep + 1))}
+              disabled={activeStep === workflowSteps.length - 1}
+              className="btn btn-secondary px-6 py-3 text-sm min-w-[100px]"
+            >
+              Next <ChevronRight className="w-4 h-4 ml-2" />
+            </motion.button>
           </div>
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setActiveStep(Math.min(workflowSteps.length - 1, activeStep + 1))}
-            disabled={activeStep === workflowSteps.length - 1}
-            className="btn btn-secondary px-6"
-          >
-            Next <ChevronRight className="w-4 h-4" />
-          </motion.button>
+          <p className="text-xs text-text-muted text-center px-4 max-w-md">
+            Step {activeStep + 1} of {workflowSteps.length}: {workflowSteps[activeStep].title}
+          </p>
         </div>
       </div>
     </section>

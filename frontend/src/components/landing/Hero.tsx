@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, type Variants } from 'motion/react';
-import { ArrowRight, CheckCircle2, ShieldCheck, Zap, Database, Users, Clock, ExternalLink } from 'lucide-react';
+import { ArrowRight, CheckCircle2, ShieldCheck, Zap, Database, Users, Clock } from 'lucide-react';
 import { useReducedMotion } from '../../hooks/useReducedMotion';
 
 interface HeroProps {
@@ -16,10 +16,10 @@ const stats = [
 ];
 
 const trustBadges = [
-  'SOC 2 Type II Certified',
-  'GDPR Compliant',
-  'ISO 27001 Aligned',
-  'PCI DSS Ready',
+  'SOC 2 Type II Aligned',
+  'GDPR Ready',
+  'ISO 27001 Mapped',
+  'PCI DSS Architecture',
 ];
 
 export function Hero({ onExploreClick, onDemoClick }: HeroProps) {
@@ -48,12 +48,13 @@ export function Hero({ onExploreClick, onDemoClick }: HeroProps) {
         {/* Base Gradient */}
         <div className="absolute inset-0 bg-gradient-hero" />
         
-        {/* Grid Pattern */}
-        <div className="absolute inset-0 grid-pattern opacity-50" />
-        
-        {/* Radial Glows */}
-        <div className="absolute top-1/4 right-1/4 w-96 h-96 rounded-full bg-electric-lime/5 blur-3xl animate-pulse-slow" />
-        <div className="absolute bottom-1/4 left-1/4 w-72 h-72 rounded-full bg-silver-glass/5 blur-3xl animate-pulse-slow" style={{ animationDelay: '2s' }} />
+        {/* Radial Glows - respect reduced motion */}
+        {!prefersReducedMotion && (
+          <>
+            <div className="absolute top-1/4 right-1/4 w-96 h-96 rounded-full bg-electric-lime/5 blur-3xl animate-pulse-slow" />
+            <div className="absolute bottom-1/4 left-1/4 w-72 h-72 rounded-full bg-silver-glass/5 blur-3xl animate-pulse-slow" style={{ animationDelay: '2s' }} />
+          </>
+        )}
         
         {/* Noise Texture */}
         <div className="absolute inset-0 noise-texture" />
@@ -71,7 +72,7 @@ export function Hero({ onExploreClick, onDemoClick }: HeroProps) {
             variants={itemVariants}
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-surface-glass border border-surface-glass-border text-xs font-semibold text-silver-glass uppercase tracking-wider mb-8"
           >
-            <span className="w-2 h-2 rounded-full bg-electric-lime animate-pulse-glow" />
+            <span className="w-2 h-2 rounded-full bg-electric-lime" style={{ animation: prefersReducedMotion ? 'none' : 'pulse-glow 3s ease-in-out infinite' }} />
             ENTERPRISE VENDOR INTELLIGENCE PLATFORM
           </motion.span>
 
@@ -89,10 +90,9 @@ export function Hero({ onExploreClick, onDemoClick }: HeroProps) {
           {/* Subheadline */}
           <motion.p
             variants={itemVariants}
-            className="text-lg md:text-xl text-text-secondary max-w-3xl mx-auto mb-12 leading-relaxed"
+            className="prose text-base md:text-lg text-text-secondary mx-auto mb-12 leading-relaxed"
           >
-            Streamline vendor onboarding, centralize documentation, and strengthen risk oversight through
-            a connected management platform powered by a 12-rule deterministic engine.
+            Bring vendor onboarding, documentation, and risk review into one organized platform.
           </motion.p>
 
           {/* CTA Buttons */}
@@ -144,7 +144,7 @@ export function Hero({ onExploreClick, onDemoClick }: HeroProps) {
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto"
+          className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto"
           role="list"
           aria-label="Platform statistics"
         >
@@ -153,21 +153,20 @@ export function Hero({ onExploreClick, onDemoClick }: HeroProps) {
               key={stat.label}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.9 + index * 0.08, duration: 0.5 }}
+              transition={{ delay: 0.9 + index * 0.05, duration: 0.4 }}
               className="group relative p-6 md:p-8 glass rounded-2xl border border-surface-glass-border hover:border-electric-lime/30 transition-all duration-300"
               role="listitem"
             >
               <div className="flex items-center justify-between mb-4">
                 <stat.icon className="w-6 h-6 text-electric-lime" />
-                <ExternalLink className="w-4 h-4 text-text-muted opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
               <div className="flex items-baseline gap-1">
                 <motion.span
-                  className="font-display font-extrabold text-4xl md:text-5xl lg:text-6xl text-text-primary"
+                  className="font-display font-extrabold text-3xl md:text-4xl lg:text-5xl text-text-primary"
                 >
                   {stat.label}
                 </motion.span>
-                <span className="font-display font-extrabold text-3xl md:text-4xl text-electric-lime">
+                <span className="font-display font-extrabold text-2xl md:text-3xl text-electric-lime">
                   {stat.suffix}
                 </span>
               </div>
@@ -176,21 +175,6 @@ export function Hero({ onExploreClick, onDemoClick }: HeroProps) {
           ))}
         </motion.div>
       </div>
-
-      {/* Scroll Indicator */}
-      <motion.div
-        animate={{ y: [0, 10, 0] }}
-        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-text-muted"
-        aria-hidden="true"
-      >
-        <span className="text-xs font-medium uppercase tracking-wider">Scroll to explore</span>
-        <motion.div
-          animate={{ y: [0, 8, 0] }}
-          transition={{ duration: 1.5, repeat: Infinity }}
-          className="w-1.5 h-1.5 rounded-full bg-electric-lime/50"
-        />
-      </motion.div>
     </section>
   );
 }
