@@ -1,0 +1,6 @@
+{
+  "name": "VendorIQ",
+  "description": "Intelligent vendor onboarding, risk evaluation, and explainable compliance review platform for enterprise procurement teams.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

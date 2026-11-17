@@ -1,0 +1,65 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Enterprise procurement officer or vendor user profile with MFA settings",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string", "enum": ["reviewer", "approver", "administrator", "auditor", "vendor"] },
+        "organizationId": { "type": "string" },
+        "mfaEnabled": { "type": "boolean" },
+        "mfaEnrolledAt": { "type": "string" },
+        "mfaType": { "type": "string", "enum": ["TOTP", "SMS", "WEBAUTHN"] },
+        "lastMfaVerifiedAt": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "email", "role", "organizationId"]
+    },
+    "VendorApplication": {
+      "title": "VendorApplication",
+      "description": "Vendor onboarding application record with compliance checks and status",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "organizationId": { "type": "string" },
+        "vendorId": { "type": "string" },
+        "status": { "type": "string" },
+        "riskLevel": { "type": "string" },
+        "riskScore": { "type": "number" },
+        "submittedAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "organizationId", "vendorId", "status", "riskLevel"]
+    },
+    "AuditEvent": {
+      "title": "AuditEvent",
+      "description": "Append-only immutable audit trail record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "organizationId": { "type": "string" },
+        "applicationId": { "type": "string" },
+        "action": { "type": "string" },
+        "timestamp": { "type": "string" }
+      },
+      "required": ["id", "organizationId", "action", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Collection of user profiles and MFA credentials"
+    },
+    "/applications/{applicationId}": {
+      "schema": "VendorApplication",
+      "description": "Collection of vendor applications"
+    },
+    "/audit_logs/{logId}": {
+      "schema": "AuditEvent",
+      "description": "Append-only compliance audit trail"
+    }
+  }
+}

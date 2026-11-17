@@ -1,0 +1,54 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if request is from an authenticated user
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to check document ownership
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Enterprise domain check
+    function isEnterpriseStaff() {
+      return isAuthenticated() && request.auth.token.email.matches('.*@terybi\\.com$');
+    }
+
+    // Users collection rules: users can read and update their own profile and MFA status
+    match /users/{userId} {
+      allow read, write: if isOwner(userId) || isEnterpriseStaff();
+    }
+
+    // Applications collection: accessible by authenticated users
+    match /applications/{applicationId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
+    // Audit logs: read-only for auditors and authenticated users, append-only (immutable)
+    match /audit_logs/{logId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if false; // Append-only audit integrity guaranteed
+    }
+
+    // Notifications collection
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
+    // Messages collection
+    match /messages/{messageId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
+    // Connection test document
+    match /test/connection {
+      allow read: if true;
+    }
+  }
+}
