@@ -5,6 +5,26 @@ import { messageService } from '../services/messageService';
 
 export const apiRouter = Router();
 
+// Root API Index
+apiRouter.get('/', (_req: Request, res: Response) => {
+  res.json({
+    status: 'ok',
+    message: 'VendorIQ Enterprise API Engine is online',
+    version: '2.6.4',
+    endpoints: {
+      health: '/api/health',
+      notifications: '/api/notifications',
+      messages: '/api/messages',
+      applications: '/api/applications',
+      vendors: '/api/vendors',
+      invoices: '/api/invoices',
+      scorecards: '/api/scorecards',
+      contracts: '/api/contracts',
+      stream: '/api/notifications/stream'
+    }
+  });
+});
+
 // Health Check
 apiRouter.get('/health', (_req: Request, res: Response) => {
   res.json({

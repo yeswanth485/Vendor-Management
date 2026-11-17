@@ -29,6 +29,24 @@ app.use((req: Request, _res: Response, next: NextFunction) => {
 app.use('/api', apiRouter);
 app.use('/', apiRouter);
 
+// 404 Fallback handler
+app.use((req: Request, res: Response) => {
+  res.status(404).json({
+    error: 'Not Found',
+    message: `Cannot ${req.method} ${req.path}`,
+    availableEndpoints: [
+      '/api',
+      '/api/health',
+      '/api/notifications',
+      '/api/messages',
+      '/api/applications',
+      '/api/vendors',
+      '/api/invoices',
+      '/api/notifications/stream'
+    ]
+  });
+});
+
 // Global Error Handler
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   console.error('[API Error]:', err);
@@ -38,16 +56,28 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   });
 });
 
-// Start Server
-if (process.env.NODE_ENV !== 'test') {
-  app.listen(PORT, () => {
-    console.log(`====================================================`);
-    console.log(`  VendorIQ Enterprise Backend Server`);
-    console.log(`  Listening on http://localhost:${PORT}`);
-    console.log(`  API Base:   http://localhost:${PORT}/api`);
-    console.log(`  SSE Stream: http://localhost:${PORT}/api/notifications/stream`);
-    console.log(`====================================================`);
-  });
+// Start Server only in standalone local mode (never inside Vercel/serverless environments)
+const isServerless = 
+  process.env.VERCEL === '1' || 
+  process.env.VERCEL === 'true' || 
+  !!process.env.VERCEL_ENV || 
+  !!process.env.VERCEL_REGION || 
+  !!process.env.NOW_REGION || 
+  !!process.env.AWS_LAMBDA_FUNCTION_NAME;
+
+if (process.env.NODE_ENV !== 'test' && !isServerless) {
+  try {
+    app.listen(PORT, () => {
+      console.log(`====================================================`);
+      console.log(`  VendorIQ Enterprise Backend Server`);
+      console.log(`  Listening on http://localhost:${PORT}`);
+      console.log(`  API Base:   http://localhost:${PORT}/api`);
+      console.log(`  SSE Stream: http://localhost:${PORT}/api/notifications/stream`);
+      console.log(`====================================================`);
+    });
+  } catch (err) {
+    console.warn('[Server] Standalone listen skipped:', err);
+  }
 }
 
 export default app;
