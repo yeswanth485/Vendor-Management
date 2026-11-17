@@ -1,23 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { AppStorage } from './lib/storage';
-import { AppShell } from './components/layout/AppShell';
-import { OverviewDashboard } from './components/dashboard/OverviewDashboard';
-import { VendorList } from './components/vendors/VendorList';
-import { ApplicationList } from './components/applications/ApplicationList';
-import { ApplicationDetailView } from './components/applications/ApplicationDetailView';
-import { VendorApplicationWizard } from './components/applications/VendorApplicationWizard';
-import { ReviewQueue } from './components/review/ReviewQueue';
-import { RiskAndExceptions } from './components/risk/RiskAndExceptions';
-import { FollowUpManager } from './components/followups/FollowUpManager';
-import { AuditLogView } from './components/audit/AuditLogView';
-import { RulesAndSettings } from './components/settings/RulesAndSettings';
-import { ApAutomationHub } from './components/ap/ApAutomationHub';
-import { VendorManagementWorkspace } from './components/workspace/VendorManagementWorkspace';
-import { TestSuiteModal } from './components/testing/TestSuiteModal';
-import { MfaEnrollmentModal } from './components/auth/MfaEnrollmentModal';
+import { UserMfaProfile } from './lib/firebase';
+import { LandingPage } from './components/landing';
 import { AuthModal } from './components/auth/AuthModal';
-import { auth, onAuthStateChanged, syncUserProfile, UserMfaProfile } from './lib/firebase';
+import { MfaEnrollmentModal } from './components/auth/MfaEnrollmentModal';
+import { TestSuiteModal } from './components/testing/TestSuiteModal';
+import { auth, onAuthStateChanged, syncUserProfile } from './lib/firebase';
+
+// Lazy load the main app components to reduce initial bundle size
+const MainApp = lazy(() => import('./MainApp').then(module => ({ default: module.MainApp })));
 
 export default function App() {
   const storage = AppStorage.getInstance();
@@ -45,6 +38,7 @@ export default function App() {
   // Modals state
   const [isMfaEnrollmentOpen, setIsMfaEnrollmentOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isTestSuiteOpen, setIsTestSuiteOpen] = useState(false);
 
   // Subscribe to storage mutations for reactive state
   useEffect(() => {
@@ -74,179 +68,33 @@ export default function App() {
     } catch (e) {}
   };
 
-  const [currentTab, setCurrentTab] = useState<string>('workspace');
-  const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
-  const [isWizardOpen, setIsWizardOpen] = useState(false);
-  const [isTestSuiteOpen, setIsTestSuiteOpen] = useState(false);
-
-  const applications = storage.getApplications();
-  const vendors = storage.getVendors();
-  const auditEvents = storage.getAuditEvents();
-  const followUps = storage.getFollowUps();
-
-  const handleSelectApplication = (id: string) => {
-    setSelectedApplicationId(id);
-    setCurrentTab('applications');
-    setIsWizardOpen(false);
-  };
-
-  const handleBackToApplications = () => {
-    setSelectedApplicationId(null);
-  };
-
-  const handleOpenNewApplication = () => {
-    setIsWizardOpen(true);
-    setSelectedApplicationId(null);
-    setCurrentTab('applications');
-  };
-
-  const handleWizardSuccess = (newAppId: string) => {
-    setIsWizardOpen(false);
-    setSelectedApplicationId(newAppId);
-    setCurrentTab('applications');
-  };
-
-  const handleTabChange = (tab: string) => {
-    setCurrentTab(tab);
-    setIsWizardOpen(false);
-    if (tab !== 'applications') {
-      setSelectedApplicationId(null);
-    }
-  };
-
   return (
-    <AppShell
-      currentTab={currentTab}
-      onTabChange={handleTabChange}
-      onOpenNewApplication={handleOpenNewApplication}
-      onOpenTestSuite={() => setIsTestSuiteOpen(true)}
-      userProfile={userProfile}
-      onOpenMfaEnrollment={() => setIsMfaEnrollmentOpen(true)}
-      onOpenAuthModal={() => setIsAuthModalOpen(true)}
-    >
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={currentTab}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -6 }}
-          transition={{ duration: 0.2 }}
-        >
-          {/* ServiceNow-style Vendor Management Workspace (Direct Video Implementation) */}
-          {currentTab === 'workspace' && (
-            <VendorManagementWorkspace
-              userProfile={userProfile}
-              onNavigateToAp={() => handleTabChange('invoices_ap')}
-              onNavigateToVendorDetail={(_vendorId: string) => handleTabChange('vendors')}
-            />
-          )}
+    <BrowserRouter>
+      <Routes>
+        {/* Public Landing Page */}
+        <Route path="/" element={<LandingPage />} />
+        
+        {/* Protected Application Routes */}
+        <Route path="/app/*" element={
+          <ProtectedAppRoute
+            userProfile={userProfile}
+            onUpdateUserProfile={handleUpdateUserProfile}
+            onOpenMfaEnrollment={() => setIsMfaEnrollmentOpen(true)}
+            onOpenAuthModal={() => setIsAuthModalOpen(true)}
+            onOpenTestSuite={() => setIsTestSuiteOpen(true)}
+          />
+        } />
+        
+        {/* Redirect any unknown routes to landing page */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
 
-          {/* Overview Dashboard */}
-          {currentTab === 'overview' && (
-            <OverviewDashboard
-              applications={applications}
-              vendors={vendors}
-              auditEvents={auditEvents}
-              followUps={followUps}
-              onSelectApplication={handleSelectApplication}
-              onNavigateToTab={handleTabChange}
-            />
-          )}
-
-          {/* Vendors Master */}
-          {currentTab === 'vendors' && (
-            <VendorList
-              vendors={vendors}
-              onSelectApplication={handleSelectApplication}
-              onNavigateToRiskExceptions={() => handleTabChange('risk_exceptions')}
-              onNavigateToAp={() => handleTabChange('invoices_ap')}
-            />
-          )}
-
-          {/* AP Automation & 3-Way Matching Hub (Zoho Compete) */}
-          {currentTab === 'invoices_ap' && (
-            <ApAutomationHub
-              userProfile={userProfile}
-              onNavigateToRiskExceptions={() => handleTabChange('risk_exceptions')}
-              onNavigateToVendor={(vendorId) => handleTabChange('vendors')}
-            />
-          )}
-
-          {/* Applications / Detail / Wizard */}
-          {currentTab === 'applications' && (
-            <>
-              {isWizardOpen ? (
-                <VendorApplicationWizard
-                  onSuccess={handleWizardSuccess}
-                  onCancel={() => setIsWizardOpen(false)}
-                />
-              ) : selectedApplicationId ? (
-                <ApplicationDetailView
-                  applicationId={selectedApplicationId}
-                  onBack={handleBackToApplications}
-                  onNavigateToApplication={handleSelectApplication}
-                  userProfile={userProfile}
-                />
-              ) : (
-                <ApplicationList
-                  applications={applications}
-                  onSelectApplication={handleSelectApplication}
-                  onNewApplication={handleOpenNewApplication}
-                />
-              )}
-            </>
-          )}
-
-          {/* Review Queue */}
-          {currentTab === 'review_queue' && (
-            <ReviewQueue
-              applications={applications}
-              onSelectApplication={handleSelectApplication}
-            />
-          )}
-
-          {/* Risk & Exceptions Center (Edge Cases & Bank Change Hold) */}
-          {currentTab === 'risk_exceptions' && (
-            <RiskAndExceptions
-              applications={applications}
-              onSelectApplication={handleSelectApplication}
-              userProfile={userProfile}
-            />
-          )}
-
-          {/* Follow-ups & Resend Communications */}
-          {currentTab === 'follow_ups' && (
-            <FollowUpManager
-              followUps={followUps}
-              applications={applications}
-              onSelectApplication={handleSelectApplication}
-            />
-          )}
-
-          {/* Audit Log */}
-          {currentTab === 'audit_log' && (
-            <AuditLogView
-              auditEvents={auditEvents}
-              onSelectApplication={handleSelectApplication}
-            />
-          )}
-
-          {/* Rules & Settings */}
-          {currentTab === 'settings' && (
-            <RulesAndSettings
-              onOpenTestSuite={() => setIsTestSuiteOpen(true)}
-            />
-          )}
-        </motion.div>
-      </AnimatePresence>
-
-      {/* Automated Vitest-style Test Suite Modal */}
+      {/* Global Modals (available on all routes) */}
       <TestSuiteModal
         isOpen={isTestSuiteOpen}
         onClose={() => setIsTestSuiteOpen(false)}
       />
 
-      {/* Multi-Factor Authentication (MFA) Enrollment Center */}
       <MfaEnrollmentModal
         isOpen={isMfaEnrollmentOpen}
         onClose={() => setIsMfaEnrollmentOpen(false)}
@@ -254,7 +102,6 @@ export default function App() {
         onProfileUpdated={handleUpdateUserProfile}
       />
 
-      {/* Firebase Authentication & Identity Management Modal */}
       <AuthModal
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
@@ -262,6 +109,49 @@ export default function App() {
         onProfileUpdated={handleUpdateUserProfile}
         onOpenMfaEnrollment={() => setIsMfaEnrollmentOpen(true)}
       />
-    </AppShell>
+    </BrowserRouter>
+  );
+}
+
+function ProtectedAppRoute({
+  userProfile,
+  onUpdateUserProfile,
+  onOpenMfaEnrollment,
+  onOpenAuthModal,
+  onOpenTestSuite,
+}: {
+  userProfile: UserMfaProfile;
+  onUpdateUserProfile: (updated: UserMfaProfile) => void;
+  onOpenMfaEnrollment: () => void;
+  onOpenAuthModal: () => void;
+  onOpenTestSuite: () => void;
+}) {
+  return (
+    <Suspense fallback={<AppLoadingFallback />}>
+      <MainApp
+        userProfile={userProfile}
+        onUpdateUserProfile={onUpdateUserProfile}
+        onOpenMfaEnrollment={onOpenMfaEnrollment}
+        onOpenAuthModal={onOpenAuthModal}
+        onOpenTestSuite={onOpenTestSuite}
+      />
+    </Suspense>
+  );
+}
+
+function AppLoadingFallback() {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="min-h-screen flex items-center justify-center bg-bg-primary"
+    >
+      <div className="text-center">
+        <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-gradient-to-br from-electric-lime to-lime-active flex items-center justify-center animate-pulse-glow">
+          <span className="font-display font-extrabold text-lg text-ink-black">V</span>
+        </div>
+        <p className="text-text-secondary">Loading VendorIQ...</p>
+      </div>
+    </motion.div>
   );
 }
